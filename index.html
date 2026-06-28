@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Gallery</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f0f;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    #site-header {
+      background: #1a1a1a;
+      border-bottom: 1px solid #2a2a2a;
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+
+    #site-header-inner {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 14px 24px;
+      flex-wrap: wrap;
+    }
+
+    #site-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    /* ── Group nav tabs ── */
+    #group-nav {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .group-tab {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #3a3a3a;
+      background: transparent;
+      color: #aaa;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+
+    .group-tab:hover { background: #2a2a2a; color: #eee; }
+    .group-tab.active { background: #fff; color: #000; border-color: #fff; }
+
+    /* ── Main content ── */
+    #content {
+      padding: 28px 24px 48px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Group section ── */
+    .group-section { margin-bottom: 48px; }
+    .group-section.hidden { display: none; }
+
+    .group-heading {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .group-count {
+      font-size: 12px;
+      font-weight: 400;
+      color: #666;
+      background: #222;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* ── Card grid ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid #2a2a2a;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      text-decoration: none;
+      display: block;
+      color: inherit;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.55);
+      border-color: #444;
+    }
+
+    /* ── Thumbnail ── */
+    .thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #111;
+      overflow: hidden;
+    }
+
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .card:hover .thumb-wrap img { transform: scale(1.05); }
+
+    .play-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .card:hover .play-overlay { opacity: 1; }
+
+    .play-overlay svg {
+      width: 48px;
+      height: 48px;
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.6));
+    }
+
+    .original-link {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 10;
+      width: 26px;
+      height: 26px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s ease, background 0.15s ease;
+    }
+
+    .card:hover .original-link { opacity: 1; }
+    .original-link:hover { background: rgba(255,255,255,0.25); }
+
+    .original-link svg {
+      width: 14px;
+      height: 14px;
+      stroke: #fff;
+      fill: none;
+      flex-shrink: 0;
+    }
+
+    /* ── Card info ── */
+    .card-info {
+      padding: 10px 12px 12px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #eee;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .card-person {
+      font-size: 11px;
+      color: #999;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-category {
+      font-size: 10px;
+      font-weight: 600;
+      color: #aaa;
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      padding: 2px 7px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* ── States ── */
+    #loading {
+      text-align: center;
+      padding: 80px 24px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    #error-msg {
+      display: none;
+      text-align: center;
+      padding: 80px 24px;
+      color: #e55;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="site-header">
+  <div id="site-header-inner">
+    <h1>Video Gallery</h1>
+    <nav id="group-nav" aria-label="グループ切り替え"></nav>
+  </div>
+</div>
+
+<div id="loading">読み込み中...</div>
+<div id="error-msg">データの読み込みに失敗しました。</div>
+<div id="content"></div>
+
+<script>
+  const DATA_URL   = './videos.json';
+  const FORMAT_URL = './urlformat.json';
+
+  const loading   = document.getElementById('loading');
+  const errorMsg  = document.getElementById('error-msg');
+  const content   = document.getElementById('content');
+  const groupNav  = document.getElementById('group-nav');
+
+  // ── URL テンプレート解決 ───────────────────────────────
+  // "{field}" をアイテムのフィールド値で置換する
+  // "{a|b}" は a が存在すれば a、なければ b を使うフォールバック記法
+  function applyTemplate(template, item) {
+    return template.replace(/\{([\w|]+)\}/g, (_, expr) => {
+      for (const field of expr.split('|')) {
+        if (item[field] != null && item[field] !== '') return item[field];
+      }
+      return '';
+    });
+  }
+
+  function resolveItem(item, formats) {
+    const fmt = formats[item.urlformat];
+    if (!fmt) return item; // 未知のフォーマットはそのまま
+    return {
+      ...item,
+      url:         applyTemplate(fmt.url,         item),
+      thumbnail:   applyTemplate(fmt.thumbnail,   item),
+      originalurl: fmt.originalurl ? applyTemplate(fmt.originalurl, item) : '',
+    };
+  }
+
+  // ── Build a single card ────────────────────────────────
+  function buildCard(item) {
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = item.url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.setAttribute('aria-label', `${item.title}${item.person ? ' — ' + item.person : ''}`);
+
+    const thumb = item.thumbnail
+      ? `<img src="${item.thumbnail}" alt="${item.title}" loading="lazy">`
+      : `<img src="https://picsum.photos/seed/${item.id}/480/270" alt="${item.title}" loading="lazy">`;
+
+    const originalBtn = item.originalurl ? `
+      <a class="original-link" href="${item.originalurl}" target="_blank" rel="noopener noreferrer"
+         aria-label="オリジナルページを開く" title="オリジナルページを開く"
+         onclick="event.stopPropagation()">
+        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+          <polyline points="15 3 21 3 21 9"/>
+          <line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+      </a>` : '';
+
+    a.innerHTML = `
+      <div class="thumb-wrap">
+        ${thumb}
+        ${originalBtn}
+        <div class="play-overlay">
+          <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="40" r="36" fill="rgba(0,0,0,0.5)"/>
+            <polygon points="31,24 58,40 31,56" fill="white"/>
+          </svg>
+        </div>
+      </div>
+      <div class="card-info">
+        <div class="card-title">${item.title}</div>
+        <div class="card-meta">
+          ${item.person ? `<span class="card-person">${item.person}</span>` : ''}
+          ${item.category ? `<span class="card-category">${item.category}</span>` : ''}
+        </div>
+      </div>
+    `;
+
+    return a;
+  }
+
+  // ── Build one group section ────────────────────────────
+  function buildSection(group) {
+    const section = document.createElement('section');
+    section.className = 'group-section';
+    section.dataset.group = group.group;
+
+    const heading = document.createElement('h2');
+    heading.className = 'group-heading';
+    heading.innerHTML = `
+      ${group.group}
+      <span class="group-count">${group.items.length}</span>
+    `;
+    section.appendChild(heading);
+
+    const grid = document.createElement('div');
+    grid.className = 'card-grid';
+    group.items.forEach(item => grid.appendChild(buildCard(item)));
+    section.appendChild(grid);
+
+    return section;
+  }
+
+  // ── Group nav tabs ─────────────────────────────────────
+  function buildNav(groups) {
+    const allTab = document.createElement('button');
+    allTab.className = 'group-tab active';
+    allTab.textContent = 'すべて';
+    allTab.addEventListener('click', () => filterGroup(null, allTab));
+    groupNav.appendChild(allTab);
+
+    groups.forEach(group => {
+      const tab = document.createElement('button');
+      tab.className = 'group-tab';
+      tab.textContent = group.group;
+      tab.addEventListener('click', () => filterGroup(group.group, tab));
+      groupNav.appendChild(tab);
+    });
+  }
+
+  function filterGroup(groupName, activeTab) {
+    // Update tab styles
+    document.querySelectorAll('.group-tab').forEach(t => t.classList.remove('active'));
+    activeTab.classList.add('active');
+
+    // Show/hide sections
+    document.querySelectorAll('.group-section').forEach(section => {
+      if (!groupName || section.dataset.group === groupName) {
+        section.classList.remove('hidden');
+      } else {
+        section.classList.add('hidden');
+      }
+    });
+  }
+
+  // ── Load data ──────────────────────────────────────────
+  Promise.all([
+    fetch(DATA_URL).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+    fetch(FORMAT_URL).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }),
+  ])
+    .then(([groups, formats]) => {
+      // 各アイテムの url / thumbnail をフォーマット定義から解決
+      const resolved = groups.map(group => ({
+        ...group,
+        items: group.items.map(item => resolveItem(item, formats)),
+      }));
+
+      loading.style.display = 'none';
+      buildNav(resolved);
+      const fragment = document.createDocumentFragment();
+      resolved.forEach(group => fragment.appendChild(buildSection(group)));
+      content.appendChild(fragment);
+    })
+    .catch(err => {
+      loading.style.display = 'none';
+      errorMsg.style.display = 'block';
+      console.error('Failed to load data:', err);
+    });
+</script>
+</body>
+</html>
