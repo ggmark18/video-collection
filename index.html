@@ -42,8 +42,11 @@
     #group-nav {
       display: flex;
       gap: 6px;
-      flex-wrap: wrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    #group-nav::-webkit-scrollbar { display: none; }
 
     .group-tab {
       padding: 5px 14px;
@@ -136,6 +139,12 @@
       -ms-overflow-style: none; /* IE/Edge */
     }
     .card-grid::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+    /* グループ単体表示時は折り返しグリッド */
+    .card-grid.wrap-mode {
+      overflow-x: visible;
+      flex-wrap: wrap;
+    }
 
     /* ── Card ── */
     .card {
@@ -429,9 +438,11 @@
     section.appendChild(wrap);
 
     const updateHint = () => {
-      const hasMore = grid.scrollLeft + grid.clientWidth < grid.scrollWidth - 1;
+      const hasMore = !grid.classList.contains('wrap-mode') &&
+                      grid.scrollLeft + grid.clientWidth < grid.scrollWidth - 1;
       wrap.classList.toggle('has-more', hasMore);
     };
+    grid._updateHint = updateHint;
     grid.addEventListener('scroll', updateHint, { passive: true });
     const ro = new ResizeObserver(updateHint);
     ro.observe(grid);
@@ -461,12 +472,17 @@
     document.querySelectorAll('.group-tab').forEach(t => t.classList.remove('active'));
     activeTab.classList.add('active');
 
-    // Show/hide sections
+    // Show/hide sections & switch scroll vs wrap
+    const isAll = !groupName;
     document.querySelectorAll('.group-section').forEach(section => {
-      if (!groupName || section.dataset.group === groupName) {
-        section.classList.remove('hidden');
-      } else {
-        section.classList.add('hidden');
+      const visible = isAll || section.dataset.group === groupName;
+      section.classList.toggle('hidden', !visible);
+
+      const grid = section.querySelector('.card-grid');
+      if (grid) {
+        // 単体グループ表示時は折り返し、すべて表示時は横スクロール
+        grid.classList.toggle('wrap-mode', !isAll);
+        if (grid._updateHint) grid._updateHint();
       }
     });
   }
