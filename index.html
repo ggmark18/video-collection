@@ -93,6 +93,40 @@
     }
 
     /* ── Card grid ── */
+    .card-grid-wrap {
+      position: relative;
+    }
+    .card-grid-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0; right: -20px; bottom: 0;
+      width: 80px;
+      background: linear-gradient(to right, transparent, #0f0f0f);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .card-grid-wrap.has-more::after { opacity: 1; }
+
+    .scroll-hint {
+      position: absolute;
+      top: 50%;
+      right: -20px;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.18);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .scroll-hint svg { width: 24px; height: 24px; stroke: #fff; fill: none; }
+    .card-grid-wrap.has-more .scroll-hint { opacity: 1; }
+
     .card-grid {
       display: flex;
       flex-direction: row;
@@ -379,10 +413,28 @@
 //    `;
 //    section.appendChild(heading);
 
+    const wrap = document.createElement('div');
+    wrap.className = 'card-grid-wrap';
+
     const grid = document.createElement('div');
     grid.className = 'card-grid';
     group.items.forEach(item => grid.appendChild(buildCard(item)));
-    section.appendChild(grid);
+
+    const hint = document.createElement('div');
+    hint.className = 'scroll-hint';
+    hint.innerHTML = `<svg viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+    wrap.appendChild(grid);
+    wrap.appendChild(hint);
+    section.appendChild(wrap);
+
+    const updateHint = () => {
+      const hasMore = grid.scrollLeft + grid.clientWidth < grid.scrollWidth - 1;
+      wrap.classList.toggle('has-more', hasMore);
+    };
+    grid.addEventListener('scroll', updateHint, { passive: true });
+    const ro = new ResizeObserver(updateHint);
+    ro.observe(grid);
 
     return section;
   }
