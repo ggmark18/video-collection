@@ -294,7 +294,7 @@
   }
 
   function resolveItem(item, formats) {
-    const fmt = formats[item.urlformat];
+    const fmt = formats[item.id] ?? formats[item.urlformat];
     if (!fmt) return item; // 未知のフォーマットはそのまま
     return {
       ...item,
