@@ -64,12 +64,11 @@
     /* ── Main content ── */
     #content {
       padding: 28px 24px 48px;
-      max-width: 1400px;
-      margin: 0 auto;
+      margin: 0 20px;
     }
 
     /* ── Group section ── */
-    .group-section { margin-bottom: 48px; }
+    .group-section { margin-bottom: 5px; }
     .group-section.hidden { display: none; }
 
     .group-heading {
@@ -96,7 +95,7 @@
     /* ── Card grid ── */
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 16px;
     }
 
@@ -194,11 +193,21 @@
       font-weight: 600;
       color: #eee;
       line-height: 1.4;
-      margin-bottom: 8px;
+      margin-bottom: 1px;
       overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis; 
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
+    }
+    .card-title:hover {
+	width: auto; /* 幅を解除して全文表示 */
+	overflow: visible; /* 非表示を解除 */
+	white-space: normal; /* 折り返しを許可 */
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 重なったときに枠線を強調 */
+	position: relative;
+	z-index: 10;
     }
 
     .card-meta {
@@ -358,12 +367,12 @@
     section.dataset.group = group.group;
 
     const heading = document.createElement('h2');
-    heading.className = 'group-heading';
-    heading.innerHTML = `
-      ${group.group}
-      <span class="group-count">${group.items.length}</span>
-    `;
-    section.appendChild(heading);
+//    heading.className = 'group-heading';
+//    heading.innerHTML = `
+//      ${group.group}
+//      <span class="group-count">${group.items.length}</span>
+//    `;
+//    section.appendChild(heading);
 
     const grid = document.createElement('div');
     grid.className = 'card-grid';
