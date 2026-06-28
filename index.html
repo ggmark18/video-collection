@@ -243,6 +243,12 @@
       color: #e55;
       font-size: 14px;
     }
+
+    /* ── Footer ── */
+    #site-footer {
+      border-top: 1px solid #2a2a2a;
+      margin-top: 24px;
+    }
   </style>
 </head>
 <body>
@@ -257,10 +263,18 @@
 <div id="loading">読み込み中...</div>
 <div id="error-msg">データの読み込みに失敗しました。</div>
 <div id="content"></div>
+<footer id="site-footer"></footer>
 
 <script>
   const DATA_URL   = './videos.json';
   const FORMAT_URL = './urlformat.json';
+  const FOOTER_URL = './footer.html';
+
+  // ── Footer ────────────────────────────────────────────
+  fetch(FOOTER_URL)
+    .then(r => { if (!r.ok) throw new Error(); return r.text(); })
+    .then(html => { document.getElementById('site-footer').innerHTML = html; })
+    .catch(() => { /* footer.html がなければ何も表示しない */ });
 
   const loading   = document.getElementById('loading');
   const errorMsg  = document.getElementById('error-msg');
